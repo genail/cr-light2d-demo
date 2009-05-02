@@ -37,61 +37,80 @@ import pl.graniec.coralreef.light2d.LightResistor;
 import pl.graniec.coralreef.light2d.LightSource;
 import pl.graniec.coralreef.light2d.SimpleLightAlgorithm;
 import pl.graniec.coralreef.pulpcore.desktop.CoreApplication;
+import pulpcore.Input;
 import pulpcore.Stage;
 import pulpcore.image.CoreGraphics;
 import pulpcore.scene.Scene;
-import pulpcore.sprite.FilledSprite;
 
 /**
  * @author Piotr Korzuszek <piotr.korzuszek@gmail.com>
  *
  */
-public class MainScene extends Scene {
+public class CirclesScene extends Scene {
 
 	final List<Shape> shapes = new LinkedList<Shape>();
-
-	Shape rotatingShapeOrigin, rotatingShape;
-	FilledSprite lightSprite;
+	private LightSource source;
 	
-	LightSource source;
-	Geometry rays;
-	float angle = 0;
+	SimpleLightAlgorithm algorithm;
+	private Geometry rays;
 	
-	float fps;
-	int timePassed;
+	public static void main(String[] args) {
+		final CoreApplication app = new CoreApplication(CirclesScene.class);
+		app.run();
+	}
 	
 	@Override
 	public void load() {
-		rotatingShapeOrigin = new Shape();
-		rotatingShapeOrigin.addVerticle(new Point2(300, 250));
-		rotatingShapeOrigin.addVerticle(new Point2(350, 300));
-		rotatingShapeOrigin.addVerticle(new Point2(300, 350));
-		rotatingShapeOrigin.addVerticle(new Point2(250, 300));
+		// create circle shape
+		final Shape circle = buildCircle(8, 10);
 		
-//		shapes.add(shape);
+		// 4 shapes at top and 4 at bottom
+		final Shape[] shapes = new Shape[8];
 		
-		lightSprite = new FilledSprite(0xFFFFFFFF);
-		lightSprite.setSize(10, 10);
-		lightSprite.anchorX.set(0.5f);
-		lightSprite.anchorY.set(0.5f);
-		lightSprite.x.set(Stage.getWidth() / 2);
-		lightSprite.y.set(Stage.getHeight() / 2);
+		for (int i = 0; i < shapes.length; ++i) {
+			shapes[i] = new Shape(circle);
+			this.shapes.add(shapes[i]);
+		}
 		
-//		add(lightSprite);
+		for (int i = 0; i < 4; ++i) {
+			shapes[i].translate((Stage.getWidth() - 40) / 4 * (i + 1) - 40, 80);
+		}
 		
-		System.out.println(rays);
+		for (int i = 4; i < 8; ++i) {
+			shapes[i].translate((Stage.getWidth() - 40) / 4 * (i - 3) - 40, Stage.getHeight() - 80);
+		}
+		
+		algorithm = new SimpleLightAlgorithm();
+		
+		// add resistors
+		for (int i = 0; i < shapes.length; ++i) {
+			algorithm.addLightResistor(new LightResistor(shapes[i]));
+			source = new LightSource(Stage.getWidth() / 2, Stage.getHeight() / 2, 1000);
+		}
 		
 	}
 	
-	/*
-	 * @see pulpcore.scene.Scene2D#drawScene(pulpcore.image.CoreGraphics)
-	 */
+	private Shape buildCircle(final int parts, final int radius) {
+		final Shape shape = new Shape();
+		
+		float delta = 360.0f / parts;
+		
+		for (int i = 0; i < parts; ++i) {
+			final float angle = i * delta;
+			
+			final float x = (float) Math.sin(Math.toRadians(angle)) * radius;
+			final float y = (float) Math.cos(Math.toRadians(angle)) * radius;
+			
+			shape.addVerticle(new Point2(x, y));
+		}
+		
+		return shape;
+	}
+
 	@Override
 	public void drawScene(CoreGraphics g) {
 		g.setColor(0xFF000000);
 		g.fill();
-		
-		lightSprite.draw(g);
 		
 		for (final Shape shape : shapes) {
 			shape.draw(g);
@@ -105,55 +124,14 @@ public class MainScene extends Scene {
 			g.drawLine(source.x, source.y, points[i].x, points[i].y);
 		}
 	}
-	
+
 	@Override
 	public void updateScene(int elapsedTime) {
-		angle += 45f * (elapsedTime / 1000f);
 		
-		final float xtrans = (float) Math.sin(Math.toRadians(angle)) * 150;
-		final float ytrans = (float) Math.cos(Math.toRadians(angle)) * 150;
+		source.x = Input.getMouseX();
+		source.y = Input.getMouseY();
 		
-//		System.out.println(angle + " x=" + xtrans);
-		
-		if (rotatingShape != null) {
-			shapes.remove(rotatingShape);
-		}
-		
-		rotatingShape = new Shape(rotatingShapeOrigin);
-		rotatingShape.translate(xtrans, ytrans);
-		
-		shapes.add(rotatingShape);
-		
-		
-		final SimpleLightAlgorithm algorithm = new SimpleLightAlgorithm();
-		
-		final LightResistor resistor = new LightResistor(rotatingShape);
-		source = new LightSource(Stage.getWidth() / 2, Stage.getHeight() / 2, 300);
-		
-		algorithm.addLightResistor(resistor);
 		rays = algorithm.createRays(source);
-		
-		// fps
-		++fps;
-		timePassed += elapsedTime;
-		
-		if (timePassed >= 1000) {
-			final float realFps = fps * (1000f / timePassed);
-			System.out.println("fps: " + realFps);
-			
-			fps -= realFps;
-			timePassed %= 1000;
-		}
 	}
-	
-	
-	
-	public static void main(String[] args) {
-		final CoreApplication app = new CoreApplication(MainScene.class);
-		app.run();
-	}
-	
+
 }
-
-
-
