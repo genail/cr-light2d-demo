@@ -61,32 +61,29 @@ public class CirclesScene extends Scene {
 	
 	@Override
 	public void load() {
-		// create circle shape
-		final Shape circle = buildCircle(8, 10);
 		
-		// 4 shapes at top and 4 at bottom
-		final Shape[] shapes = new Shape[8];
-		
-		for (int i = 0; i < shapes.length; ++i) {
-			shapes[i] = new Shape(circle);
-			this.shapes.add(shapes[i]);
-		}
-		
-		for (int i = 0; i < 4; ++i) {
-			shapes[i].translate((Stage.getWidth() - 40) / 4 * (i + 1) - 40, 80);
-		}
-		
-		for (int i = 4; i < 8; ++i) {
-			shapes[i].translate((Stage.getWidth() - 40) / 4 * (i - 3) - 40, Stage.getHeight() - 80);
-		}
+		final int rows = 4;
+		final int cols = 4;
+		final int circleRadius = 20;
+		final int circleParts = 8;
 		
 		algorithm = new SimpleLightAlgorithm();
 		
-		// add resistors
-		for (int i = 0; i < shapes.length; ++i) {
-			algorithm.addLightResistor(new LightResistor(shapes[i]));
-			source = new LightSource(Stage.getWidth() / 2, Stage.getHeight() / 2, 1000);
+		for (int x = 0; x < cols; ++x) {
+			for (int y = 0; y < rows; ++y) {
+				final int posX = Stage.getWidth() / rows * x + Stage.getWidth() / (rows * 2);
+				final int posY = Stage.getHeight() / cols * y + Stage.getHeight() / (cols * 2);
+				
+				final Shape shape = buildCircle(circleParts, circleRadius);
+				
+				shape.translate(posX, posY);
+				shapes.add(shape);
+				
+				algorithm.addLightResistor(new LightResistor(shape));
+			}
 		}
+		
+		source = new LightSource(Stage.getWidth() / 2, Stage.getHeight() / 2, 500);
 		
 	}
 	
@@ -120,8 +117,25 @@ public class CirclesScene extends Scene {
 		g.setColor(0xFFFFFF00);
 		
 		final Point2[] points = rays.getVerticles();
+		
+		Point2 prev, next = null, first = null;
+		
 		for (int i = 0; i < points.length; ++i) {
-			g.drawLine(source.x, source.y, points[i].x, points[i].y);
+			
+			prev = next;
+			next = points[i];
+			
+			if (first == null) {
+				first = points[i];
+			}
+			
+			if (prev != null) {
+				g.drawLine(prev.x, prev.y, next.x, next.y);
+			}
+		}
+		
+		if (first != null && first != next) {
+			g.drawLine(first.x, first.y, next.x, next.y);
 		}
 	}
 
