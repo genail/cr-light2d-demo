@@ -36,7 +36,7 @@
         <dependency>
             <groupId>pl.graniec</groupId>
             <artifactId>cr-light2d</artifactId>
-            <version>0.1-SNAPSHOT</version>
+            <version>0.1</version>
         </dependency>
     
         <!-- JUnit -->
@@ -71,6 +71,60 @@
                 
         </plugins>
     </build>
+    
+    <profiles>
+        
+        <profile>
+            <id>webstart-circles</id>
+            <activation>
+                <property>
+                    <name>webstart-circles</name>
+                </property>
+            </activation>
+            
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.codehaus.mojo.webstart</groupId>
+                        <artifactId>webstart-maven-plugin</artifactId>
+                        
+                        <executions>
+                           <execution>
+                              <goals>
+                                 <goal>jnlp</goal>
+                              </goals>
+                           </execution>
+                        </executions>
+                        
+                        <configuration>
+                            
+                            <excludeTransitive>false</excludeTransitive>
+
+                            <jnlp>
+                                <outputFile>circles.jnlp</outputFile>
+                                <mainClass>pl.graniec.coralreef.light2d.demo.CirclesScene</mainClass>
+                            </jnlp>
+
+                            <!-- keypass and storepass should be defined in settings.xml -->
+                            <sign>
+                                <keystore>graniec.jks</keystore>
+                                <keypass>${graniec.keypass}</keypass>
+                                <storepass>${graniec.storepass}</storepass>
+                                <alias>graniec.pl</alias>
+
+                                <verify>true</verify> <!-- verify that the signing operation succeeded -->
+                            </sign>
+
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+            
+        </profile>
+        
+        
+        
+    </profiles>
     
 </project>
 
