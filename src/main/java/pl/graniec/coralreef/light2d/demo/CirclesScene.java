@@ -48,11 +48,20 @@ import pulpcore.scene.Scene;
  */
 public class CirclesScene extends Scene {
 
+	/** Shapes that are also light resistors */
 	final List<Shape> shapes = new LinkedList<Shape>();
+	
+	/** Source of the light */
 	private LightSource source;
 	
+	/** The rays algorithm */
 	SimpleLightAlgorithm algorithm;
+	
+	/** Keeps the calculated rays */
 	private Geometry rays;
+	
+	/** This helps to do the rays calculation with delay */
+	int calculate = 0;
 	
 	public static void main(String[] args) {
 		final CoreApplication app = new CoreApplication(CirclesScene.class);
@@ -62,6 +71,10 @@ public class CirclesScene extends Scene {
 	@Override
 	public void load() {
 		
+		// set the light source
+		source = new LightSource(0, 0, 300);
+		
+		// and some light resistors
 		final int rows = 4;
 		final int cols = 4;
 		final int circleRadius = 20;
@@ -80,13 +93,21 @@ public class CirclesScene extends Scene {
 				shapes.add(shape);
 				
 				algorithm.addLightResistor(new LightResistor(shape));
+				
 			}
 		}
 		
-		source = new LightSource(Stage.getWidth() / 2, Stage.getHeight() / 2, 500);
 		
 	}
 	
+	/**
+	 * Builds a circle.
+	 * 
+	 * @param parts Number of circle parts.
+	 * @param radius Circle radius.
+	 * 
+	 * @return Circle shape.
+	 */
 	private Shape buildCircle(final int parts, final int radius) {
 		final Shape shape = new Shape();
 		
@@ -137,6 +158,10 @@ public class CirclesScene extends Scene {
 		if (first != null && first != next) {
 			g.drawLine(first.x, first.y, next.x, next.y);
 		}
+		
+		// draw light point
+		g.setColor(0xFFFFFFFF);
+		g.drawLine(source.x, source.y, source.x+1, source.y+1);
 	}
 
 	@Override
@@ -145,7 +170,13 @@ public class CirclesScene extends Scene {
 		source.x = Input.getMouseX();
 		source.y = Input.getMouseY();
 		
-		rays = algorithm.createRays(source);
+		// calculate rays once for two updates
+		if (calculate == 0) {
+			rays = algorithm.createRays(source);
+			calculate = 2;
+		} else {
+			--calculate;
+		}
 	}
 
 }
